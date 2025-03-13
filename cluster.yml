@@ -1,0 +1,67 @@
+---
+- hosts: all
+  remote_user: root
+  vars:
+    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
+
+  tasks:
+
+    - name: Ensure sbcli is present and up-to-date
+      pip:
+        name: "{{ sbcli }}"
+        state: latest
+
+    - name: Clean previous install
+      command: "{{ sbcli }} sn deploy-cleaner"
+
+
+- hosts: storage_nodes
+  remote_user: root
+  vars:
+    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
+
+  tasks:
+    - name: Deploy storage node
+      command: "{{ sbcli }} sn deploy --ifname {{ management_nic }}"
+
+
+- hosts: management_node
+  remote_user: root
+  vars:
+    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
+    high_availability: "{{ groups['storage_nodes'] | map('extract', hostvars) | map(attribute='secondary')
+        | select('defined') | map('bool') | select() | list | length > 0 }}"  # ~= "| any"
+
+  tasks:
+    - name: Create cluster
+      command: "{{ sbcli }} --dev cluster create --ha-type {{ 'ha' if high_availability else 'single' }} --data-chunks-per-stripe 1 --parity-chunks-per-stripe 1 --ifname {{ management_nic }}"
+      register: cluster_creation
+
+    - name: Store Cluster ID
+      set_fact:
+        cluster_id: "{{ cluster_creation.stdout.splitlines()[-1] }}"
+
+    - name: Add storage nodes
+      command: "{{ sbcli }} --dev storage-node add-node --max-lvol=50 --max-size=100G --number-of-devices=3 --journal-partition=0 --number-of-distribs=4 {{ '--is-secondary' if (hostvars[item].secondary | default(False)) else ''}} {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
+      loop: "{{ groups['storage_nodes'] }}"
+
+    - name: Activate cluster
+      command: "{{ sbcli }} cluster activate {{ cluster_id }}"
+
+    - name: Create storage pool
+      command: "{{ sbcli }} pool add {{ pool }} {{ cluster_id }}"
+      when: pool is defined
+
+    - name: Query cluster secret
+      command: "{{ sbcli }} cluster get {{ cluster_id }}"
+      register: cluster_details
+
+    - name: Parse cluster secret
+      set_fact:
+        cluster_secret: "{{ (cluster_details.stdout | from_json)['secret'] }}"
+
+    - name: Print cluster information
+      debug:
+        msg: "{{ cluster_id }} {{ cluster_secret }}"
+
+...
