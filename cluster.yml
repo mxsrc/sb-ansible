@@ -1,8 +1,12 @@
 ---
+- hosts: localhost
+  tasks:
+    - name: Determine sbcli name
+      set_fact:
+        sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
+
 - hosts: all
   remote_user: root
-  vars:
-    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
 
   tasks:
 
@@ -17,8 +21,6 @@
 
 - hosts: storage_nodes
   remote_user: root
-  vars:
-    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
 
   tasks:
     - name: Deploy storage node
@@ -28,7 +30,6 @@
 - hosts: management_node
   remote_user: root
   vars:
-    sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
     high_availability: "{{ groups['storage_nodes'] | map('extract', hostvars) | map(attribute='secondary')
         | select('defined') | map('bool') | select() | list | length > 0 }}"  # ~= "| any"
 
