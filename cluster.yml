@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- hosts: all
+  gather_facts: no
   tasks:
     - name: Determine sbcli name
       set_fact:
@@ -9,6 +10,11 @@
   remote_user: root
 
   tasks:
+    - name: Ensure interfaces are present
+      assert:
+        that:
+          - management_nic in ansible_facts.interfaces
+          - data_nic in ansible_facts.interfaces
 
     - name: Ensure sbcli is present and up-to-date
       pip:
