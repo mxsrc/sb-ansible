@@ -1,0 +1,29 @@
+---
+- hosts: localhost
+  gather_facts: no
+  remote_user: root
+  tasks:
+    - name: Prune old host keys
+      command: "ssh-keygen -R {{ item }}"
+      loop: "{{ groups['all'] }}"
+
+    - name: Query current host keys
+      command: "ssh-keyscan -t ed25519 {{ groups['all'] | join(' ') }}"
+      register: host_key
+
+    - name: Deploy current host keys
+      lineinfile:
+        path: "~/.ssh/known_hosts"
+        line: "{{ item }}"
+      loop: "{{ host_key.stdout.splitlines()[1::2] }}"
+
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: Deploy authorized key
+      authorized_key:
+        user: root
+        key: "{{ public_key }}"
+        state: present
+      when: public_key is defined
+...
