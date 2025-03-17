@@ -15,7 +15,7 @@
     - name: Deploy authorized key
       authorized_key:
         user: root
-        key: "{{ public_key }}"
+        key: "{{ lookup('file', public_key) }}"
         state: present
       when: public_key is defined
 ...
