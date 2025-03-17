@@ -3,19 +3,11 @@
   gather_facts: no
   remote_user: root
   tasks:
-    - name: Prune old host keys
-      command: "ssh-keygen -R {{ item }}"
+    - name: Set known host keys
+      known_hosts:
+        name: "{{ item }}"
+        key: "{{ item }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID8FriTYrjakrvsjKp3RfuzZiNs0RBt+T4RvOB4jWZ/j"
       loop: "{{ groups['all'] }}"
-
-    - name: Query current host keys
-      command: "ssh-keyscan -t ed25519 {{ groups['all'] | join(' ') }}"
-      register: host_key
-
-    - name: Deploy current host keys
-      lineinfile:
-        path: "~/.ssh/known_hosts"
-        line: "{{ item }}"
-      loop: "{{ host_key.stdout.splitlines()[1::2] }}"
 
 - hosts: all
   remote_user: root
