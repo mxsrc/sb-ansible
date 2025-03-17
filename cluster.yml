@@ -16,6 +16,34 @@
           - management_nic in ansible_facts.interfaces
           - data_nic in ansible_facts.interfaces
 
+    - name: Enable docker repo
+      get_url:
+        url: "https://download.docker.com/linux/rhel/docker-ce.repo"
+        dest: /etc/yum.repos.d
+
+    - name: Ensure required and useful packages are present
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+          - python3-requests
+          - tmux
+        state: present
+
+    - name: Ensure docker daemon is running
+      systemd_service:
+        name: docker
+        state: started
+        enabled: yes
+        daemon-reload: yes
+
+    - name: Ensure docker is authenticated
+      docker_login:
+        username: "{{ docker_user }}"
+        password: "{{ docker_password }}"
+
     - name: Ensure sbcli is present and up-to-date
       pip:
         name: "{{ sbcli }}"
