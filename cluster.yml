@@ -1,12 +1,5 @@
 ---
 - hosts: all
-  gather_facts: no
-  tasks:
-    - name: Determine sbcli name
-      set_fact:
-        sbcli: "sbcli{{'-' + sbcli_branch if sbcli_branch is defined else ''}}"
-
-- hosts: all
   remote_user: root
 
   tasks:
@@ -46,8 +39,26 @@
 
     - name: Ensure sbcli is present and up-to-date
       pip:
-        name: "{{ sbcli }}"
+        name: "{{ sbcli_package | default('sbcli-dev') }}"
         state: latest
+
+    - name: Read sbcli details
+      read_csv:
+        path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
+        fieldnames: ['key', 'value']
+        delimiter: '='
+      register: sbcli_details
+
+    - name: Determine sbcli command
+      set_fact:
+        sbcli: "{{ (sbcli_details.list | selectattr('key', 'equalto', 'SIMPLY_BLOCK_COMMAND_NAME') | list | first).value | default('') }}"
+
+    - name: Override sbcli image
+      ini_file:
+        path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
+        option: 'SIMPLY_BLOCK_DOCKER_IMAGE'
+        value: "{{ sb_image }}"
+      when: sb_image is defined
 
     - name: Clean previous install
       command: "{{ sbcli }} sn deploy-cleaner"

@@ -15,8 +15,9 @@ Create an inventory, e.g.:
 
 Run the playbook:
 ```
-ansible-playbook -i hosts -e 'sbcli_branch=dev management_nic=ens18 data_nic=ens16 pool=pool1' cluster.yml
+ansible-playbook -i hosts -e 'management_nic=ens18 data_nic=ens16 pool=pool1' cluster.yml
 ```
+The optional variables `sbcli_package` and `sb_image` allow to specify a specific `sbcli` version to install, and an image that is used instead of the configured one.
 
 You can use the `ssh.yml` playbook to accept any host keys from all hosts in your inventory and deploy your SSH public key:
 
