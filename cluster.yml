@@ -66,6 +66,7 @@
 
 - hosts: storage_nodes
   remote_user: root
+  serial: 2  # Avoid rate limits
 
   tasks:
     - name: Deploy storage node
