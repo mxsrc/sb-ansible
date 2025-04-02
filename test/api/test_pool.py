@@ -2,14 +2,7 @@ import re
 
 import pytest
 
-_uuid_regex = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
-
-def _list(call, type):
-    return [
-        obj['uuid']
-        for obj
-        in call('GET', f'/{type}/')
-    ]
+import util
 
 
 def test_api(call):
@@ -18,24 +11,17 @@ def test_api(call):
 
 def test_pool(call, cluster):
     pool_uuid = call('POST', '/pool', data={'name': 'poolX', 'cluster_id': cluster, 'no_secret': True})
-    assert re.match(_uuid_regex, pool_uuid)
+    assert re.match(util.uuid_regex, pool_uuid)
 
     assert call('GET', f'/pool/{pool_uuid}')[0]['uuid'] == pool_uuid
-    assert pool_uuid in _list(call, 'pool')
+    assert pool_uuid in util.list(call, 'pool')
 
     call('DELETE', f'/pool/{pool_uuid}')
 
-    assert pool_uuid not in _list(call, 'pool')
+    assert pool_uuid not in util.list(call, 'pool')
 
     with pytest.raises(ValueError) as e:
         call('GET', f'/pool/{pool_uuid}')
-
-
-@pytest.fixture
-def pool(call, cluster):
-    pool_uuid = call('POST', '/pool', data={'name': 'poolX', 'cluster_id': cluster, 'no_secret': True})
-    yield pool_uuid
-    call('DELETE', f'/pool/{pool_uuid}')
 
 
 def test_pool_duplicate(call, cluster, pool):
@@ -48,7 +34,7 @@ def test_pool_delete_missing(call):
         call('DELETE', f'/pool/invalid_uuid')
 
 
-@pytest.mark.skip(reason="Known faulty")
+@pytest.mark.skip(reason="SFAM-1837")
 def test_pool_update(call, cluster, pool):
     values = [
         ('name', 'pool_name', 'poolY'),
@@ -88,7 +74,7 @@ def test_pool_capacity(call, pool):
     # TODO match expected schema
 
 
-@pytest.mark.skip(reason="Known faulty")
+#@pytest.mark.skip(reason="Known faulty")  # TODO Create issue: 404
 def test_pool_capacity_history(call, pool):
-    io_stats = call('GET', f'/pool/capacity/{pool}/history/10m')
+    call('GET', f'/pool/capacity/{pool}/history/10m')
     # TODO match expected schema

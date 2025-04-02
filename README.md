@@ -24,3 +24,11 @@ You can use the `ssh.yml` playbook to accept any host keys from all hosts in you
 ```
 ansible-playbook -i hosts -k -e "public_key='<key>'" ssh.yml
 ```
+
+## Testing
+The directory `test` includes scripts to test the API of a cluster.
+Install the requirements and run the tests from the directory:
+
+```
+pytest --entrypoint=<IP> --cluster=<cluster_id> --secret=<secret>
+```
