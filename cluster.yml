@@ -23,6 +23,7 @@
           - docker-compose-plugin
           - python3-requests
           - tmux
+          - git
         state: present
 
     - name: Ensure docker daemon is running
