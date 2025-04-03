@@ -88,6 +88,9 @@
     - name: Store Cluster ID
       set_fact:
         cluster_id: "{{ cluster_creation.stdout.splitlines()[-1] }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: ["{{ inventory_hostname }}", "localhost"]
 
     - name: Add storage nodes
       command: "{{ sbcli }} --dev storage-node add-node --max-lvol=50 --max-size=100G --number-of-devices=3 --journal-partition=0 --number-of-distribs=4 {{ '--is-secondary' if (hostvars[item].secondary | default(False)) else ''}} {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
@@ -107,6 +110,9 @@
     - name: Parse cluster secret
       set_fact:
         cluster_secret: "{{ (cluster_details.stdout | from_json)['secret'] }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: ["{{ inventory_hostname }}", "localhost"]
 
     - name: Print cluster information
       debug:
