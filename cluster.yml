@@ -41,7 +41,7 @@
     - name: Ensure sbcli is present and up-to-date
       pip:
         name: "{{ sbcli_package | default('sbcli-dev') }}"
-        state: latest
+        state: "{{ 'forcereinstall' if (sbcli_package | default('sbcli-dev')) is url else 'latest' }}"
 
     - name: Read sbcli details
       read_csv:
