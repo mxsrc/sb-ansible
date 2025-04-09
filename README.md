@@ -10,7 +10,6 @@ Create an inventory, e.g.:
 192.168.10.122
 192.168.10.123
 192.168.10.124
-192.168.10.125 secondary=True
 ```
 
 Run the playbook:

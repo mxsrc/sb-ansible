@@ -77,8 +77,7 @@
 - hosts: management_node
   remote_user: root
   vars:
-    high_availability: "{{ groups['storage_nodes'] | map('extract', hostvars) | map(attribute='secondary')
-        | select('defined') | map('bool') | select() | list | length > 0 }}"  # ~= "| any"
+    high_availability: "{{ (groups['storage_nodes'] | length) > 1 }}"
 
   tasks:
     - name: Create cluster
@@ -93,7 +92,7 @@
       loop: ["{{ inventory_hostname }}", "localhost"]
 
     - name: Add storage nodes
-      command: "{{ sbcli }} --dev storage-node add-node --max-lvol=50 --max-size=100G --number-of-devices=3 --journal-partition=0 --number-of-distribs=4 {{ '--is-secondary' if (hostvars[item].secondary | default(False)) else ''}} {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
+      command: "{{ sbcli }} --dev storage-node add-node --max-lvol=50 --max-size=100G --number-of-devices=3 --journal-partition=0 --ssd-pcie 0000:00:02.0 0000:00:03.0 0000:00:04.0 0000:00:05.0 --number-of-distribs=4 {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
       loop: "{{ groups['storage_nodes'] }}"
 
     - name: Activate cluster
