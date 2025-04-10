@@ -2,6 +2,7 @@ import re
 import time
 
 import pytest
+from requests.exceptions import HTTPError
 
 import util
 
@@ -25,22 +26,21 @@ def test_lvol(call, cluster, pool):
 
     assert lvol_uuid not in util.list(call, 'lvol')
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(HTTPError) as e:
         call('GET', f'/lvol/{lvol_uuid}')
 
 
-@pytest.mark.skip(reason="SFAM-1897")
 def test_lvol_get(call, cluster, pool, lvol):
     pool_name = call('GET', f'/pool/{pool}')[0]['pool_name']
     lvol_details = call('GET', f'/lvol/{lvol}')
 
     assert len(lvol_details) == 1
     assert lvol_details[0]['lvol_name'] == 'lvolX'
+    assert lvol_details[0]['lvol_type'] == 'lvol'
     assert lvol_details[0]['uuid'] == lvol
     assert lvol_details[0]['pool_name'] == pool_name
-    assert lvol_details[0]['pool_uuid'] == pool_name
-    assert lvol_details[0]['size'] == 2 ** 30
-    assert lvol_details[0]['type'] == 'lvol'
+    assert lvol_details[0]['pool_uuid'] == pool
+    assert lvol_details[0]['size'] == 10 ** 9
     # TODO assert schema
 
 
@@ -53,10 +53,10 @@ def test_lvol_update(call, cluster, pool, lvol):
         'max-w-mbytes': 1
     })
     lvol_details = call('GET', f'/lvol/{lvol}')
-    assert lvol_details[0]['max-rw-iops'] == 1
-    assert lvol_details[0]['max-rw-mbytes'] == 1
-    assert lvol_details[0]['max-r-mbytes'] == 1
-    assert lvol_details[0]['max-w-mbytes'] == 1
+    assert lvol_details[0]['rw_ios_per_sec'] == 1
+    assert lvol_details[0]['rw_mbytes_per_sec'] == 1
+    assert lvol_details[0]['r_mbytes_per_sec'] == 1
+    assert lvol_details[0]['w_mbytes_per_sec'] == 1
 
 
 def test_resize(call, cluster, pool, lvol):

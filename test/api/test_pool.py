@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from requests.exceptions import HTTPError
 
 import util
 
@@ -20,21 +21,20 @@ def test_pool(call, cluster):
 
     assert pool_uuid not in util.list(call, 'pool')
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(HTTPError) as e:
         call('GET', f'/pool/{pool_uuid}')
 
 
 def test_pool_duplicate(call, cluster, pool):
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(HTTPError) as e:
         pool_uuid = call('POST', '/pool', data={'name': 'poolX', 'cluster_id': cluster, 'no_secret': True})
 
 
 def test_pool_delete_missing(call):
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(HTTPError) as e:
         call('DELETE', f'/pool/invalid_uuid')
 
 
-@pytest.mark.skip(reason="SFAM-1837")
 def test_pool_update(call, cluster, pool):
     values = [
         ('name', 'pool_name', 'poolY'),
