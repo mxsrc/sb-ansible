@@ -61,6 +61,13 @@
         value: "{{ sb_image }}"
       when: sb_image is defined
 
+    - name: Override ultra image
+      ini_file:
+        path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
+        option: 'SIMPLY_BLOCK_SPDK_ULTRA_IMAGE'
+        value: "{{ ultra_image }}"
+      when: ultra_image is defined
+
     - name: Clean previous install
       command: "{{ sbcli }} sn deploy-cleaner"
 
