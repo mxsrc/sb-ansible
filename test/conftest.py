@@ -1,5 +1,6 @@
+import functools
+
 import pytest
-import requests
 
 import util
 
@@ -19,35 +20,13 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture(scope='session')
 def call(request):
     options = request.config.option
-
-    def f(method, path, fail=True, data=None):
-
-        response = requests.request(
-            method,
-            f'http://{options.entrypoint}{path}',
-            headers={'Authorization': f'{options.cluster} {options.secret}'},
-            json=data,
-        )
-
-        if fail:
-            response.raise_for_status() 
-
-        try:
-            result = response.json()
-        except requests.exceptions.JSONDecodeError:
-            print("Failed to decode content as JSON:")
-            print(response.text)
-            if fail:
-                raise
-
-        if not result['status']:
-            raise ValueError(result.get('error', 'Request failed'))
-
-        print(f'{method} {path}' + (f" -> {result['results']}" if method == 'POST' else ''))
-
-        return result['results']
-
-    return f
+    return functools.partial(
+            util.api_call,
+            options.entrypoint,
+            options.cluster,
+            options.secret,
+            log_func=print,
+    )
 
 
 @pytest.fixture(scope='module')
