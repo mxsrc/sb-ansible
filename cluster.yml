@@ -38,6 +38,21 @@
         username: "{{ docker_user }}"
         password: "{{ docker_password }}"
 
+    - name: Check docker configuration existence
+      stat: path=/etc/docker/daemon.json
+      register: docker_daemon_config_stat
+
+    - name: Read docker configuration
+      slurp:
+        src: /etc/docker/daemon.json
+      register: docker_daemon_config
+      when: docker_daemon_config_stat.stat.exists
+
+    - name: Add mirror proxy to docker config
+      copy:
+        dest: /etc/docker/daemon.json
+        content: "{{ docker_daemon_config['content'] | default('{}' | b64encode) | b64decode | from_json | combine({'registry-mirrors': ['http://34.32.73.43:5000']}) | to_nice_json }}"
+
     - name: Ensure sbcli is present and up-to-date
       pip:
         name: "{{ sbcli_package | default('sbcli-dev') }}"
@@ -74,7 +89,6 @@
 
 - hosts: storage_nodes
   remote_user: root
-  serial: 1  # Avoid rate limit
 
   tasks:
     - name: Deploy storage node
