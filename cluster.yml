@@ -1,6 +1,7 @@
 ---
 - hosts: all
   remote_user: root
+  any_errors_fatal: true
 
   tasks:
     - name: Ensure interfaces are present
@@ -89,6 +90,7 @@
 
 - hosts: storage_nodes
   remote_user: root
+  any_errors_fatal: true
 
   tasks:
     - name: Deploy storage node
@@ -97,6 +99,7 @@
 
 - hosts: management_node
   remote_user: root
+  any_errors_fatal: true
   vars:
     high_availability: "{{ (groups['storage_nodes'] | length) > 1 }}"
 
