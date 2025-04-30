@@ -68,7 +68,7 @@
 
     - name: Determine sbcli command
       set_fact:
-        sbcli: "{{ (sbcli_details.list | selectattr('key', 'equalto', 'SIMPLY_BLOCK_COMMAND_NAME') | list | first).value | default('') }}"
+        sbcli: "{{ (sbcli_details.list | selectattr('key', 'equalto', 'SIMPLY_BLOCK_COMMAND_NAME') | list | first).value | default('') }} {{ '-d' if (debug | default(False)) else ''}} "
 
     - name: Override sbcli image
       ini_file:
