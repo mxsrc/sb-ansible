@@ -105,7 +105,7 @@
 
   tasks:
     - name: Create cluster
-      command: "{{ sbcli }} --dev cluster create --ha-type {{ 'ha' if high_availability else 'single' }} --data-chunks-per-stripe 1 --parity-chunks-per-stripe 1 --ifname {{ management_nic }}"
+      command: "{{ sbcli }} --dev cluster create --ha-type {{ 'ha' if high_availability else 'single' }} {{ (cluster_params | default({})).items() | map('join', '=') | product(['--']) | map('reverse') | map('join') | join(' ')}} --ifname {{ management_nic }}"
       register: cluster_creation
 
     - name: Store Cluster ID
