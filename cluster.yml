@@ -97,7 +97,7 @@
       command: "{{ sbcli }} sn deploy --ifname {{ management_nic }}"
 
 
-- hosts: management_node
+- hosts: management_nodes[0]
   remote_user: root
   any_errors_fatal: true
   vars:
@@ -113,7 +113,7 @@
         cluster_id: "{{ cluster_creation.stdout.splitlines()[-1] }}"
       delegate_to: "{{ item }}"
       delegate_facts: true
-      loop: ["{{ inventory_hostname }}", "localhost"]
+      loop: "{{ ['localhost'] + groups['management_nodes'] + groups['storage_nodes'] }}"
 
     - name: Add storage nodes
       command: "{{ sbcli }} --dev storage-node add-node --ssd-pcie {{ hostvars[item]['ssds'] | join(' ') }} {{ (add_storage_node_params | default({})).items() | map('join', '=') | product(['--']) | map('reverse') | map('join') | join(' ')}} {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
@@ -135,10 +135,20 @@
         cluster_secret: "{{ (cluster_details.stdout | from_json)['secret'] }}"
       delegate_to: "{{ item }}"
       delegate_facts: true
-      loop: ["{{ inventory_hostname }}", "localhost"]
+      loop: "{{ ['localhost'] + groups['management_nodes'] + groups['storage_nodes'] }}"
 
     - name: Print cluster information
       debug:
         msg: "{{ cluster_id }} {{ cluster_secret }}"
+
+
+- hosts: management_nodes[1:]
+  remote_user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: Add management node to cluster
+      command: "{{ sbcli }} mgmt add {{ hostvars[groups['management_nodes'][0]]['ansible_' + management_nic]['ipv4']['address'] }} {{ cluster_id }} {{ cluster_secret }} {{ management_nic }}"
+      ignore_errors: true  # FIXME: Always fails.
 
 ...
