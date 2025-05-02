@@ -116,7 +116,7 @@
       loop: ["{{ inventory_hostname }}", "localhost"]
 
     - name: Add storage nodes
-      command: "{{ sbcli }} --dev storage-node add-node --max-lvol=50 --max-size=100G --number-of-devices=3 --journal-partition=0 --ssd-pcie 0000:00:02.0 0000:00:03.0 0000:00:04.0 0000:00:05.0 --number-of-distribs=4 {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
+      command: "{{ sbcli }} --dev storage-node add-node --ssd-pcie {{ hostvars[item]['ssds'] | join(' ') }} {{ (add_storage_node_params | default({})).items() | map('join', '=') | product(['--']) | map('reverse') | map('join') | join(' ')}} {{ cluster_id }} {{ item }}:5000 {{ management_nic }} --data-nics={{ data_nic }}"
       loop: "{{ groups['storage_nodes'] }}"
 
     - name: Activate cluster
