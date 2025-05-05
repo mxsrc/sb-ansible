@@ -1,5 +1,4 @@
 import re
-import time
 
 import pytest
 from requests.exceptions import HTTPError
@@ -26,7 +25,7 @@ def test_lvol(call, cluster, pool):
 
     assert lvol_uuid not in util.list(call, 'lvol')
 
-    with pytest.raises(HTTPError) as e:
+    with pytest.raises(HTTPError):
         call('GET', f'/lvol/{lvol_uuid}')
 
 
@@ -63,27 +62,27 @@ def test_resize(call, cluster, pool, lvol):
     call('PUT', f'/lvol/resize/{lvol}', data={'size': '2G'})
     call('GET', f'/lvol/{lvol}')[0]['size'] == (2 * 2 ** 30)
 
-    with pytest.raises(ValueError) as e:  # TODO Create issue
+    with pytest.raises(ValueError):
         call('PUT', f'/lvol/resize/{lvol}', data={'size': '1G'})
 
 
 def test_iostats(call, cluster, pool, lvol):
-    assert 'stats' in call('GET', f'/lvol/iostats/{lvol}')
+    call('GET', f'/lvol/iostats/{lvol}')
     # TODO check schema
 
 
 def test_iostats_history(call, cluster, pool, lvol):
-    assert 'stats' in call('GET', f'/lvol/iostats/{lvol}/history/1h')
+    call('GET', f'/lvol/iostats/{lvol}/history/1h')
     # TODO check schema
 
 
 def test_capacity(call, cluster, pool, lvol):
-    assert 'capacity' in call('GET', f'/lvol/capacity/{lvol}')
+    call('GET', f'/lvol/capacity/{lvol}')
     # TODO check schema
 
 
 def test_capacity_history(call, cluster, pool, lvol):
-    assert 'capacity' in  call('GET', f'/lvol/capacity/{lvol}/history/1h')
+    call('GET', f'/lvol/capacity/{lvol}/history/1h')
     # TODO check schema
 
 

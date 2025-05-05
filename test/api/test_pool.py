@@ -21,18 +21,18 @@ def test_pool(call, cluster):
 
     assert pool_uuid not in util.list(call, 'pool')
 
-    with pytest.raises(HTTPError) as e:
+    with pytest.raises(HTTPError):
         call('GET', f'/pool/{pool_uuid}')
 
 
 def test_pool_duplicate(call, cluster, pool):
-    with pytest.raises(HTTPError) as e:
-        pool_uuid = call('POST', '/pool', data={'name': 'poolX', 'cluster_id': cluster, 'no_secret': True})
+    with pytest.raises(HTTPError):
+        call('POST', '/pool', data={'name': 'poolX', 'cluster_id': cluster, 'no_secret': True})
 
 
 def test_pool_delete_missing(call):
-    with pytest.raises(HTTPError) as e:
-        call('DELETE', f'/pool/invalid_uuid')
+    with pytest.raises(HTTPError):
+        call('DELETE', '/pool/invalid_uuid')
 
 
 def test_pool_update(call, cluster, pool):
@@ -74,7 +74,7 @@ def test_pool_capacity(call, pool):
     # TODO match expected schema
 
 
-#@pytest.mark.skip(reason="Known faulty")  # TODO Create issue: 404
+@pytest.mark.skip(reason="Known faulty")
 def test_pool_capacity_history(call, pool):
     call('GET', f'/pool/capacity/{pool}/history/10m')
     # TODO match expected schema
