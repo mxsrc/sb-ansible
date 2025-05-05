@@ -1,0 +1,2 @@
+management_nic: eth0
+data_nic: eth1
