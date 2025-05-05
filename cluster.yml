@@ -60,7 +60,7 @@
         state: "{{ 'forcereinstall' if (sbcli_package | default('sbcli-dev')) is url else 'latest' }}"
 
     - name: Read sbcli details
-      read_csv:
+      community.general.read_csv:
         path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
         fieldnames: ['key', 'value']
         delimiter: '='
@@ -71,14 +71,14 @@
         sbcli: "{{ (sbcli_details.list | selectattr('key', 'equalto', 'SIMPLY_BLOCK_COMMAND_NAME') | list | first).value | default('') }} {{ '-d' if (debug | default(False)) else ''}} "
 
     - name: Override sbcli image
-      ini_file:
+      community.general.ini_file:
         path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
         option: 'SIMPLY_BLOCK_DOCKER_IMAGE'
         value: "{{ sb_image }}"
       when: sb_image is defined
 
     - name: Override ultra image
-      ini_file:
+      community.general.ini_file:
         path: '/usr/local/lib/python3.9/site-packages/simplyblock_core/env_var'
         option: 'SIMPLY_BLOCK_SPDK_ULTRA_IMAGE'
         value: "{{ ultra_image }}"
@@ -147,6 +147,9 @@
   any_errors_fatal: true
 
   tasks:
+    - name: Wait...
+      wait_for: timeout=180
+
     - name: Add management node to cluster
       command: "{{ sbcli }} mgmt add {{ hostvars[groups['management_nodes'][0]]['ansible_' + management_nic]['ipv4']['address'] }} {{ cluster_id }} {{ cluster_secret }} {{ management_nic }}"
       ignore_errors: true  # FIXME: Always fails.
