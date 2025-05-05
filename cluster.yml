@@ -38,6 +38,7 @@
       docker_login:
         username: "{{ docker_user }}"
         password: "{{ docker_password }}"
+      when: (docker_user is defined) and (docker_password is defined)
 
     - name: Check docker configuration existence
       stat: path=/etc/docker/daemon.json
